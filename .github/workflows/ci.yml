@@ -1,0 +1,181 @@
+name: CI - Incidencias TICS
+
+on:
+  push:
+    branches:
+      - developer
+      - staging
+      - main
+
+  pull_request:
+    branches:
+      - developer
+      - staging
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  estilo:
+    name: 1. Validar estilo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Ejecutar Flake8
+        run: flake8 src tests
+
+  pruebas_unitarias:
+    name: 2. Pruebas unitarias
+    needs: estilo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Ejecutar pruebas unitarias
+        run: python -m pytest -m unit -v
+
+  pruebas_integracion:
+    name: 3. Pruebas de integración
+    needs: pruebas_unitarias
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Ejecutar pruebas de integración
+        run: python -m pytest -m integration -v
+
+  pruebas_regresion:
+    name: 4. Pruebas de regresión
+    needs: pruebas_integracion
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Ejecutar pruebas de regresión
+        run: python -m pytest -m regression -v
+
+  pruebas_e2e:
+    name: 5. Prueba end-to-end
+    needs: pruebas_regresion
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Ejecutar prueba end-to-end
+        run: python -m pytest -m e2e -v
+
+  cobertura:
+    name: 6. Cobertura y artefactos
+    needs: pruebas_e2e
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Ejecutar pruebas y generar cobertura
+        run: |
+          python -m pytest \
+            --cov=incidencias \
+            --cov-report=term-missing \
+            --cov-report=html \
+            --cov-report=xml
+
+      - name: Publicar reporte de cobertura
+        uses: actions/upload-artifact@v7
+        with:
+          name: reporte-cobertura-${{ github.run_number }}
+          path: |
+            htmlcov/
+            coverage.xml
+          if-no-files-found: error
+          retention-days: 30
