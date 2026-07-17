@@ -94,3 +94,18 @@ La información se almacenará en:
 
 ```text
 data/incidencias.json
+
+## Requisitos previos
+
+- Python 3.13 o superior.
+- Git.
+- Visual Studio Code, recomendado.
+- Acceso al repositorio de GitHub.
+
+## Instalación local
+
+Clonar el repositorio:
+
+```powershell
+git clone URL_DEL_REPOSITORIO
+cd automatizacion-incidencias-tics
