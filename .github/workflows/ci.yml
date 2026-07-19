@@ -141,7 +141,7 @@ jobs:
       - name: Ejecutar prueba end-to-end
         run: python -m pytest -m e2e -v
 
-cobertura:
+  cobertura:
   needs: pruebas_e2e
   runs-on: ubuntu-latest
 
