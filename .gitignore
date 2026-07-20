@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Reportes generados por la aplicación
+output/*.csv
+output/*.json
+
+# Reportes generados por Coverage
+htmlcov/
+coverage.xml
+.coverage
